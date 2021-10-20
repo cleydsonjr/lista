@@ -12,9 +12,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.inject.Inject;
-import org.mapstruct.factory.Mappers;
 
+import javax.inject.Inject;
 import javax.validation.Valid;
 
 @Controller("/lists")
@@ -24,7 +23,8 @@ public class SimpleListController {
 	@Inject
 	private SimpleListService simpleListService;
 
-	private final SimpleListMapper simpleListMapper = Mappers.getMapper(SimpleListMapper.class);
+	@Inject
+	private SimpleListMapper simpleListMapper;
 
 	@Operation(summary = "Obtem a lista pelo ID")
 	@ApiResponses({

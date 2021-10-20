@@ -5,7 +5,7 @@ import fun.zaps.controllers.dtos.SimpleListDto;
 import fun.zaps.domain.SimpleList;
 import org.mapstruct.*;
 
-@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "jsr330", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public abstract class SimpleListMapper {
 
 	@Mappings({
