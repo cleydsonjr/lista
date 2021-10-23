@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.validation.Valid;
 
-@Controller("/lists")
+@Controller("/api/lists")
 @Tag(name = "SimpleList")
 public class SimpleListController {
 

@@ -18,8 +18,8 @@ import javax.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Controller("/lists/{listId}/items")
-@Tag(name = "SimpleList")
+@Controller("/api/lists/{listId}/items")
+@Tag(name = "SimpleItem")
 public class SimpleItemController {
 
 	private final SimpleItemService simpleItemService;
