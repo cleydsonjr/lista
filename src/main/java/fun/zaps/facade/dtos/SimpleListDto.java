@@ -1,6 +1,5 @@
-package fun.zaps.controllers.dtos;
+package fun.zaps.facade.dtos;
 
-import fun.zaps.domain.SimpleItem;
 import io.micronaut.core.annotation.Introspected;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -10,14 +9,12 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.Instant;
-import java.util.Set;
+import java.util.List;
 
 @Data
 @Introspected
 @AllArgsConstructor
-@Schema(
-		name = "SimpleList"
-)
+@Schema(name = "SimpleList")
 public class SimpleListDto {
 
 	@NotNull
@@ -32,6 +29,6 @@ public class SimpleListDto {
 	private String name;
 
 	@Size(max = 25)
-	private Set<SimpleItemDto> items;
+	private List<SimpleItemDto> items;
 
 }

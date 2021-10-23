@@ -1,6 +1,7 @@
-package fun.zaps.services;
+package fun.zaps.business.services;
 
-import fun.zaps.domain.SimpleList;
+import fun.zaps.business.domain.SimpleList;
+import fun.zaps.business.repositories.SimpleListRepository;
 import io.micronaut.core.annotation.NonNull;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -28,6 +29,9 @@ public class SimpleListService {
 	}
 
 	public SimpleList save(SimpleList simpleList) {
+		if (simpleList.getName() == null) {
+			simpleList.setName("Nova lista");
+		}
 		return repository.save(simpleList);
 	}
 

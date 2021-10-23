@@ -1,4 +1,4 @@
-package fun.zaps.exceptions;
+package fun.zaps.business.exceptions;
 
 import lombok.EqualsAndHashCode;
 import lombok.ToString;

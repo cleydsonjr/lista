@@ -1,4 +1,4 @@
-package fun.zaps.controllers.dtos;
+package fun.zaps.facade.dtos;
 
 import io.micronaut.core.annotation.Introspected;
 import lombok.Data;

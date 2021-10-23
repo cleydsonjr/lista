@@ -1,8 +1,8 @@
-package fun.zaps.controllers.mappers;
+package fun.zaps.facade.mappers;
 
-import fun.zaps.controllers.commands.SimpleListCommand;
-import fun.zaps.controllers.dtos.SimpleListDto;
-import fun.zaps.domain.SimpleList;
+import fun.zaps.facade.commands.SimpleListCommand;
+import fun.zaps.facade.dtos.SimpleListDto;
+import fun.zaps.business.domain.SimpleList;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "jsr330", unmappedTargetPolicy = ReportingPolicy.IGNORE)

@@ -1,4 +1,4 @@
-package fun.zaps.controllers.dtos;
+package fun.zaps.facade.dtos;
 
 import io.micronaut.core.annotation.Introspected;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,10 +17,10 @@ import java.time.Instant;
 public class SimpleItemDto {
 
 	@NotNull
-	private Long id;
+	private Instant dateCreated;
 
 	@NotNull
-	private Instant dateCreated;
+	private Instant dateUpdated;
 
 	@NotNull
 	private String value;

@@ -1,33 +1,30 @@
-package fun.zaps.domain;
+package fun.zaps.business.domain;
 
-import io.micronaut.data.annotation.DateCreated;
+import io.micronaut.core.annotation.Introspected;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.Instant;
 
 @Data
-@Entity
-@NoArgsConstructor
+@Introspected
+@RequiredArgsConstructor
 public class SimpleItem {
 
-	@Id
-	@GeneratedValue
-	private Long id;
-
-	@DateCreated
+	@NotNull
+	@NonNull
 	private Instant dateCreated;
 
 	@NotNull
-	@ManyToOne
-	@JoinColumn(name = "list_id")
-	SimpleList list;
+	@NonNull
+	private Instant dateUpdated;
 
 	@NotNull
+	@NonNull
 	@NotBlank
 	@Size(max = 25)
 	private String value;

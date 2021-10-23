@@ -1,6 +1,6 @@
-package fun.zaps.services;
+package fun.zaps.business.repositories;
 
-import fun.zaps.domain.SimpleList;
+import fun.zaps.business.domain.SimpleList;
 import io.micronaut.data.jdbc.annotation.JdbcRepository;
 import io.micronaut.data.model.query.builder.sql.Dialect;
 import io.micronaut.data.repository.CrudRepository;
