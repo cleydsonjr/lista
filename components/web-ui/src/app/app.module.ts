@@ -1,18 +1,25 @@
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+import {NgModule} from '@angular/core';
+import {BrowserModule} from '@angular/platform-browser';
 
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
+import {AppRoutingModule} from './app-routing.module';
+import {AppComponent} from './app.component';
+import {HomePage} from './pages/home-page/home.page';
+import {SimpleListPage} from './pages/simple-list-page/simple-list.page';
+import {DataModule} from "./data/data.module";
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    HomePage,
+    SimpleListPage
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    DataModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+}

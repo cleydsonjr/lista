@@ -38,7 +38,7 @@ public class SimpleItemService {
 	public Optional<SimpleItem> add(
 			@NotNull String listEncodedId,
 			@NotNull Integer index,
-			@NotBlank String value
+			@NotNull String value
 	) {
 		SimpleItem simpleItem = new SimpleItem(Instant.now(), Instant.now(), value);
 
@@ -47,7 +47,7 @@ public class SimpleItemService {
 
 	public Optional<SimpleItem> append(
 			@NotNull String listEncodedId,
-			@NotBlank String value
+			@NotNull String value
 	) {
 		SimpleItem simpleItem = new SimpleItem(Instant.now(), Instant.now(), value);
 
@@ -57,7 +57,7 @@ public class SimpleItemService {
 	public Optional<SimpleItem> update(
 			@NotNull String listEncodedId,
 			@NotNull Integer index,
-			@NotBlank @Size(max = 25) String value
+			@NotNull @Size(max = 25) String value
 	) {
 		Optional<SimpleList> maybeList = simpleListService.findByEncodedId(listEncodedId);
 

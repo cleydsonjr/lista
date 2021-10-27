@@ -23,6 +23,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
+            "preserveSymlinks": true,
             "outputPath": "dist/zaps-list",
             "index": "src/index.html",
             "main": "src/main.ts",
@@ -78,7 +79,8 @@
               "browserTarget": "zaps-list:build:production"
             },
             "development": {
-              "browserTarget": "zaps-list:build:development"
+              "browserTarget": "zaps-list:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

@@ -1,1 +1,38 @@
-/* You can add global styles to this file, and also import other style files */
+@use "~@material/typography/mdc-typography";
+@use "~@material/icon-button/styles" as icon-button-styles;
+@use '~material-icons/iconfont/filled';
+
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern";
+  background-color: #dddbd1;
+  background-image: linear-gradient(
+      180deg, #dddbd1, #d2dbdc);
+}
+
+* {
+  min-height: 0;
+}
+
+::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, .2);
+}
+
+::-webkit-scrollbar-track {
+  background: hsla(0, 0%, 100%, .1);
+}

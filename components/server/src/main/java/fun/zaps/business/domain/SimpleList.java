@@ -34,7 +34,7 @@ public class SimpleList {
 
 	@NotNull
 	@NotBlank
-	@Size(max = 25)
+	@Size(max = 30)
 	private String name;
 
 	@Size(max = 25)

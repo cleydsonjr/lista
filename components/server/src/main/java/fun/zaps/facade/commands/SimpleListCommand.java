@@ -13,7 +13,7 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 public class SimpleListCommand {
 
-	@Size(max = 25)
+	@Size(max = 30)
 	private String name;
 
 }

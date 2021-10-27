@@ -25,8 +25,7 @@ public class SimpleItem {
 
 	@NotNull
 	@NonNull
-	@NotBlank
-	@Size(max = 25)
+	@Size(max = 30)
 	private String value;
 
 }

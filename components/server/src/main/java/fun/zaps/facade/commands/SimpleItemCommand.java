@@ -16,8 +16,7 @@ import javax.validation.constraints.Size;
 public class SimpleItemCommand {
 
 	@NotNull
-	@NotBlank
-	@Size(max = 25)
+	@Size(max = 30)
 	private String value;
 
 }

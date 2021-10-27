@@ -2,16 +2,15 @@ package fun.zaps.facade.websocket;
 
 import fun.zaps.facade.commands.SimpleListOperationCommand;
 import fun.zaps.facade.executors.SimpleListOperationsExecutor;
+import io.micronaut.context.annotation.Prototype;
 import io.micronaut.websocket.WebSocketBroadcaster;
 import io.micronaut.websocket.WebSocketSession;
-import io.micronaut.websocket.annotation.OnClose;
-import io.micronaut.websocket.annotation.OnMessage;
-import io.micronaut.websocket.annotation.OnOpen;
-import io.micronaut.websocket.annotation.ServerWebSocket;
+import io.micronaut.websocket.annotation.*;
 import org.reactivestreams.Publisher;
 
 import java.util.function.Predicate;
 
+@Prototype
 @ServerWebSocket("/ws/lists/{listId}")
 public class SimpleListWebSocketServer {
 
@@ -27,9 +26,10 @@ public class SimpleListWebSocketServer {
 	}
 
 	@OnOpen
-	public Publisher<String> onOpen(String listId, WebSocketSession session) {
-		String msg = "Joined!";
-		return broadcaster.broadcast(msg, isValid(listId));
+	public void onOpen(String listId, WebSocketSession session) {
+		session.getId();
+//		String msg = "Joined!";
+//		return broadcaster.broadcast(msg, isValid(listId));
 	}
 
 	@OnMessage
@@ -45,10 +45,18 @@ public class SimpleListWebSocketServer {
 	}
 
 	@OnClose
-	public Publisher<String> onClose(
+	public void onClose(
 			String listId,
 			WebSocketSession session) {
-		String msg = "Disconnected!";
+//		String msg = "Disconnected!";
+//		return broadcaster.broadcast(msg, isValid(listId));
+	}
+
+	@OnError
+	public Publisher<String> onError(
+			String listId,
+			WebSocketSession session) {
+		String msg = "Error!";
 		return broadcaster.broadcast(msg, isValid(listId));
 	}
 

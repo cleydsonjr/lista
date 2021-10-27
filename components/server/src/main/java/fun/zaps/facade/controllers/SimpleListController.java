@@ -5,7 +5,6 @@ import fun.zaps.business.exceptions.ResourceNotFoundException;
 import fun.zaps.business.services.SimpleListService;
 import fun.zaps.facade.commands.SimpleListCommand;
 import fun.zaps.facade.commands.SimpleListOperationCommand;
-import fun.zaps.facade.dtos.SimpleItemDto;
 import fun.zaps.facade.dtos.SimpleListDto;
 import fun.zaps.facade.dtos.SimpleListOperationResultDto;
 import fun.zaps.facade.executors.SimpleListOperationsExecutor;
