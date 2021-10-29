@@ -1,3 +1,9 @@
 !components/js-client/zaps-lists-angular-client-*.tgz
+!components/js-client/.gitkeep
 components/js-client/*
 *.db
+
+.idea
+*.iml
+*.ipr
+*.iws

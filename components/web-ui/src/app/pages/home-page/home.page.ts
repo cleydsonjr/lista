@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component} from '@angular/core';
 import {SimpleListService} from "@zaps/lists-angular-client";
 import {Router} from "@angular/router";
 
@@ -7,7 +7,7 @@ import {Router} from "@angular/router";
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss']
 })
-export class HomePage implements OnInit {
+export class HomePage {
 
   constructor(
     private readonly router: Router,
@@ -15,11 +15,8 @@ export class HomePage implements OnInit {
   ) {
   }
 
-  ngOnInit(): void {
-  }
-
-  createNewList() {
-    this.simpleListService.addSimpleList({name: 'Teste okok'}).subscribe((newList) => {
+  createNewList(): void {
+    this.simpleListService.addSimpleList({name: 'Nova lista lista lista lista'}).subscribe((newList) => {
       this.router.navigate([newList.id])
     })
   }

@@ -6,6 +6,8 @@ import {AppComponent} from './app.component';
 import {HomePage} from './pages/home-page/home.page';
 import {SimpleListPage} from './pages/simple-list-page/simple-list.page';
 import {DataModule} from "./data/data.module";
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { environment } from '../environments/environment';
 
 @NgModule({
   declarations: [
@@ -17,6 +19,12 @@ import {DataModule} from "./data/data.module";
     BrowserModule,
     AppRoutingModule,
     DataModule,
+    ServiceWorkerModule.register('ngsw-worker.js', {
+      enabled: environment.production,
+      // Register the ServiceWorker as soon as the app is stable
+      // or after 30 seconds (whichever comes first).
+      registrationStrategy: 'registerWhenStable:30000'
+    }),
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -1,10 +1,11 @@
 import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {SimpleItem, SimpleItemService, SimpleList, SimpleListOperationCommand, SimpleListOperationResult, SimpleListService} from "@zaps/lists-angular-client";
 import {MDCTextField} from "@material/textfield";
-import {of} from "rxjs";
-import {ActivatedRoute, Router} from "@angular/router";
+import {ActivatedRoute, Params, Router} from "@angular/router";
 import {mergeMap} from "rxjs/operators";
 import {SimpleListDataService} from "../../data/simple-list-data.service";
+import {WebSocketSubject} from "rxjs/webSocket";
+import {MDCDialog} from "@material/dialog";
 
 @Component({
   selector: 'app-simple-list-page',
@@ -15,9 +16,12 @@ export class SimpleListPage implements OnInit, AfterViewInit {
 
   list?: SimpleList;
   items: SimpleItem[] = [];
-  hasShareApi: boolean = false;
+  hasShareApi = false;
   @ViewChild('textField') textFieldRef?: ElementRef;
   @ViewChild('simpleList') simpleListRef?: ElementRef<HTMLUListElement>;
+  @ViewChild('alertDialog') alertDialogRef?: ElementRef<HTMLDivElement>;
+  webSocketSubject?: WebSocketSubject<SimpleListOperationResult>
+  private alertDialog?: MDCDialog;
 
   constructor(
     private readonly _activatedRoute: ActivatedRoute,
@@ -29,26 +33,33 @@ export class SimpleListPage implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    const navigator = window.navigator as Navigator;
     this.hasShareApi = !!navigator.share;
     this._activatedRoute.params.pipe(
-      mergeMap((params) => this._simpleListService.getSimpleListById(params.listId))
-    ).subscribe((list => {
+      mergeMap((params: Params) => this._simpleListService.getSimpleListById(params.listId))
+    ).subscribe(((list: SimpleList) => {
       this.list = list;
       this.items = list.items;
       setTimeout(() => {
         this.scrollToBottom();
       })
-      this._simpleListDataService.connect(list.id).subscribe((result => this.refreshByResult(result)))
     }));
+    this.webSocketSubject = this._simpleListDataService.connect('7');
+    this.webSocketSubject.subscribe((result => this.refreshByResult(result)))
   }
 
   ngAfterViewInit(): void {
     if (this.textFieldRef) {
       MDCTextField.attachTo(this.textFieldRef.nativeElement);
     }
+    if (this.alertDialogRef) {
+      this.alertDialog = MDCDialog.attachTo(this.alertDialogRef.nativeElement);
+      this.alertDialog.open();
+    }
   }
 
   openShareDialog(): void {
+    const navigator = window.navigator as Navigator;
     if (navigator.share) {
       navigator.share({
         title: 'web.dev',
@@ -60,84 +71,90 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     }
   }
 
-  scrollToBottom() {
+  scrollToBottom(): void {
     if (this.simpleListRef) {
-      let nativeElement = this.simpleListRef.nativeElement;
+      const nativeElement = this.simpleListRef.nativeElement;
       nativeElement.scrollTo({
         top: nativeElement.scrollHeight
       });
     }
   }
 
-  appendItem($event: Event) {
+  appendItem($event: Event): void {
     if (this.list && $event.target instanceof HTMLInputElement && $event.target.value) {
-      let textField = $event.target as HTMLInputElement;
-      let simpleItemCommand = {value: textField.value};
+      const textField = $event.target as HTMLInputElement;
+      const simpleItemCommand = {value: textField.value};
       this._simpleItemService.appendItem(this.list.id, simpleItemCommand).subscribe((item) => {
+        console.trace(item)
         this.scrollToBottom();
         textField.value = '';
       })
     }
   }
 
-  editLastItem($event: Event) {
-    this.scrollToBottom();
-    // this.removeItem(this.items.length - 1);
+  editLastItem($event: Event): void {
+    if ($event.target instanceof HTMLInputElement && $event.target.value) {
+      this.moveToPreviousInput($event.target);
+      this.scrollToBottom();
+    }
   }
 
-  removeItem(index: number) {
+  removeItem(index: number): void {
     if (this.list) {
       this._simpleItemService.deleteItem(this.list.id, index).subscribe((item) => {
-
+        console.trace(item)
       })
     }
   }
 
-  addItem(index: number, value: string) {
+  addItem(index: number, value: string): void {
     if (this.list) {
       this._simpleItemService.addItem(this.list.id, index, {value: value}).subscribe((item) => {
-
+        console.trace(item)
       })
     }
   }
 
-  execute(command: SimpleListOperationCommand) {
-    of({
-      dateCreated: '01/01/2021 08:00',
-      dateUpdated: '01/01/2021 08:15',
-      value: command.item!.value,
-    }).subscribe((item) => {
-      this.refreshByResult({
-        command: command,
-        resultItem: item,
+  execute(command: SimpleListOperationCommand): void {
+    if (this.list) {
+      this._simpleListService.executeOperation(this.list.id, command).subscribe((result) => {
+        this.refreshByResult({
+          command: command,
+          resultItem: result.resultItem,
+        })
       })
-    })
+    }
   }
 
-  refreshByResult(operationResult: SimpleListOperationResult) {
-    let command = operationResult.command;
+  refreshByResult(operationResult: SimpleListOperationResult): void {
+    const command = operationResult.command;
     switch (command.operation) {
       case "APPEND":
         this.items.push(operationResult.resultItem);
         break;
       case "ADD":
-        this.items.splice(command.index!, 0, operationResult.resultItem);
+        if (command.index) {
+          this.items.splice(command.index, 0, operationResult.resultItem);
+        }
         break;
       case "UPDATE":
-        // this.items.splice(command.index!, 1, operationResult.resultItem);
-        let simpleItem = this.items[command.index!];
-        if (simpleItem) {
-          simpleItem.value = operationResult.resultItem.value
-          simpleItem.dateUpdated = operationResult.resultItem.dateUpdated
+        if (command.index) {
+          const simpleItem = this.items[command.index];
+          if (simpleItem) {
+            simpleItem.value = operationResult.resultItem.value
+            simpleItem.dateUpdated = operationResult.resultItem.dateUpdated
+          }
         }
         break;
       case "DELETE":
-        this.items.splice(command.index!, 1);
+        if (command.index) {
+          this.items.splice(command.index, 1);
+        }
         break;
     }
   }
 
-  removeItemIfEmpty(index: number, $event: Event, focusPrevious = false) {
+  removeItemIfEmpty(index: number, $event: Event, focusPrevious = false): void {
     if ($event.target instanceof HTMLInputElement && !$event.target.value) {
       this.removeItem(index);
       if (focusPrevious) {
@@ -146,10 +163,10 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     }
   }
 
-  listItemInputEnter(index: number, $event: Event) {
+  listItemInputEnter(index: number, $event: Event): void {
     if ($event.target instanceof HTMLInputElement && $event.target.value) {
       const targetInput = $event.target;
-      let targetIndex = index + 1;
+      const targetIndex = index + 1;
       if (targetIndex === this.items.length) {
         this.moveToNextInput(targetInput);
       } else if ((this.items.length > targetIndex && this.items[targetIndex].value) || this.items.length <= targetIndex) {
@@ -165,9 +182,10 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     }
   }
 
-  listItemInput($event: Event, index: number) {
+  listItemInput($event: Event, index: number): void {
     if (this.list && $event.target instanceof HTMLInputElement && $event.target.value) {
       this._simpleItemService.updateItem(this.list.id, index, {value: $event.target.value}).subscribe((item) => {
+        console.trace(item)
       })
     }
   }
@@ -179,19 +197,19 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     }
   }
 
-  listItemInputArrowUp($event: Event) {
+  listItemInputArrowUp($event: Event): void {
     if ($event.target instanceof HTMLInputElement) {
       this.moveToPreviousInput($event.target);
     }
   }
 
-  listItemInputArrowDown($event: Event) {
+  listItemInputArrowDown($event: Event): void {
     if ($event.target instanceof HTMLInputElement) {
       this.moveToNextInput($event.target);
     }
   }
 
-  moveToNextInput(targetInput: HTMLInputElement) {
+  moveToNextInput(targetInput: HTMLInputElement): void {
     if (targetInput.parentElement && targetInput.parentElement.parentElement) {
       const nextFormFieldElement = targetInput.parentElement.parentElement.nextElementSibling;
       if (nextFormFieldElement && nextFormFieldElement instanceof HTMLLIElement) {
@@ -200,7 +218,7 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     }
   }
 
-  moveToPreviousInput(targetInput: HTMLInputElement) {
+  moveToPreviousInput(targetInput: HTMLInputElement): void {
     if (targetInput.parentElement && targetInput.parentElement.parentElement) {
       const nextFormFieldElement = targetInput.parentElement.parentElement.previousElementSibling;
       if (nextFormFieldElement && nextFormFieldElement instanceof HTMLLIElement) {
@@ -209,7 +227,7 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     }
   }
 
-  private static focusChildInput(nextFormFieldElement: HTMLLIElement) {
+  private static focusChildInput(nextFormFieldElement: HTMLLIElement): void {
     const inputChildren = nextFormFieldElement.getElementsByTagName('input');
     if (inputChildren.length === 1) {
       inputChildren[0].focus();

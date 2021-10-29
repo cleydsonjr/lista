@@ -15,7 +15,7 @@ import {HttpClientModule} from "@angular/common/http";
     SimpleItemService,
     {
       provide: Configuration,
-      useFactory: () => new Configuration({
+      useFactory: (): Configuration => new Configuration({
         basePath: '/api'
       })
     }

@@ -59,6 +59,7 @@
     <inspection_tool class="EmptySwitchStatement" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
     <inspection_tool class="EmptyWhileStatement" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
     <inspection_tool class="EqualsOverloaded" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="Eslint" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="ExceptionExtendsError" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="ExplicitArrayListInstantiation" enabled="true" level="INFO" enabled_by_default="true" />
     <inspection_tool class="ExplicitCallToAndMethod" enabled="true" level="INFO" enabled_by_default="true" />

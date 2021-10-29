@@ -98,10 +98,5 @@
         <module name="zaps-list.main" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="fun.zaps.lista" target="11" />
-      <module name="fun.zaps.lista.main" target="11" />
-      <module name="fun.zaps.lista.test" target="11" />
-    </bytecodeTargetLevel>
   </component>
 </project>
