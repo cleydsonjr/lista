@@ -33,6 +33,7 @@
             "inlineStyleLanguage": "scss",
             "assets": [
               "src/favicon.ico",
+              "src/browserconfig.xml",
               "src/assets",
               "src/manifest.webmanifest"
             ],
@@ -105,6 +106,7 @@
             "inlineStyleLanguage": "scss",
             "assets": [
               "src/favicon.ico",
+              "src/browserconfig.xml",
               "src/assets",
               "src/manifest.webmanifest"
             ],

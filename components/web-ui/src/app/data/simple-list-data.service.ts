@@ -2,9 +2,6 @@ import {Injectable} from '@angular/core';
 import {webSocket, WebSocketSubject} from 'rxjs/webSocket';
 import {SimpleListOperationResult} from "@zaps/lists-angular-client";
 
-export const WS_ENDPOINT = 'ws://192.168.1.4:8080/ws/lists/7';
-export const RECONNECT_INTERVAL = 1000;
-
 @Injectable({
   providedIn: 'root'
 })
@@ -14,8 +11,8 @@ export class SimpleListDataService {
 
   constructor() {
     this.rootUrl = new URL(location.href);
-    this.rootUrl.protocol = 'ws:';
-    this.rootUrl.port = '8080';
+    this.rootUrl.protocol = this.rootUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+    this.rootUrl.port = this.rootUrl.port === '4200' ? '8080' : this.rootUrl.port
     this.rootUrl.pathname = '/ws/lists/listId'
   }
 

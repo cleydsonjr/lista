@@ -16,7 +16,7 @@ import {HttpClientModule} from "@angular/common/http";
     {
       provide: Configuration,
       useFactory: (): Configuration => new Configuration({
-        basePath: '/api'
+        basePath: ''
       })
     }
   ]

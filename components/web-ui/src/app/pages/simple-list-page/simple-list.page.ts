@@ -1,11 +1,12 @@
 import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {SimpleItem, SimpleItemService, SimpleList, SimpleListOperationCommand, SimpleListOperationResult, SimpleListService} from "@zaps/lists-angular-client";
 import {MDCTextField} from "@material/textfield";
-import {ActivatedRoute, Params, Router} from "@angular/router";
-import {mergeMap} from "rxjs/operators";
+import {ActivatedRoute, ParamMap, Router} from "@angular/router";
+import {debounceTime, filter, map, mergeMap, tap} from "rxjs/operators";
 import {SimpleListDataService} from "../../data/simple-list-data.service";
 import {WebSocketSubject} from "rxjs/webSocket";
-import {MDCDialog} from "@material/dialog";
+import {Subject} from "rxjs";
+import {NgForm} from "@angular/forms";
 
 @Component({
   selector: 'app-simple-list-page',
@@ -14,14 +15,16 @@ import {MDCDialog} from "@material/dialog";
 })
 export class SimpleListPage implements OnInit, AfterViewInit {
 
+  webSocketSubject?: WebSocketSubject<SimpleListOperationResult>
   list?: SimpleList;
   items: SimpleItem[] = [];
   hasShareApi = false;
   @ViewChild('textField') textFieldRef?: ElementRef;
   @ViewChild('simpleList') simpleListRef?: ElementRef<HTMLUListElement>;
   @ViewChild('alertDialog') alertDialogRef?: ElementRef<HTMLDivElement>;
-  webSocketSubject?: WebSocketSubject<SimpleListOperationResult>
-  private alertDialog?: MDCDialog;
+  @ViewChild('newItemForm') newItemForm?: NgForm;
+
+  operationCommandSubject: Subject<SimpleListOperationCommand> = new Subject<SimpleListOperationCommand>();
 
   constructor(
     private readonly _activatedRoute: ActivatedRoute,
@@ -35,40 +38,61 @@ export class SimpleListPage implements OnInit, AfterViewInit {
   ngOnInit(): void {
     const navigator = window.navigator as Navigator;
     this.hasShareApi = !!navigator.share;
-    this._activatedRoute.params.pipe(
-      mergeMap((params: Params) => this._simpleListService.getSimpleListById(params.listId))
+    this._activatedRoute.paramMap.pipe(
+      filter((params: ParamMap) => params.has('listId')),
+      map((params: ParamMap) => params.get('listId')!),
+      tap((listId: string) => {
+        this.webSocketSubject = this._simpleListDataService.connect(listId);
+        this.webSocketSubject.subscribe((result => this.refreshByResult(result)));
+      }),
+      mergeMap((listId: string) => this._simpleListService.getSimpleListById(listId))
     ).subscribe(((list: SimpleList) => {
       this.list = list;
       this.items = list.items;
+      this.subscribeToOperationCommand(list.id);
       setTimeout(() => {
         this.scrollToBottom();
       })
     }));
-    this.webSocketSubject = this._simpleListDataService.connect('7');
-    this.webSocketSubject.subscribe((result => this.refreshByResult(result)))
   }
 
   ngAfterViewInit(): void {
     if (this.textFieldRef) {
       MDCTextField.attachTo(this.textFieldRef.nativeElement);
     }
-    if (this.alertDialogRef) {
-      this.alertDialog = MDCDialog.attachTo(this.alertDialogRef.nativeElement);
-      this.alertDialog.open();
-    }
+  }
+
+  subscribeToOperationCommand(listId: string): void {
+    this.operationCommandSubject.pipe(
+      debounceTime(500),
+      mergeMap((command) => this._simpleListService.executeOperation(listId, command))
+    ).subscribe(
+      (result) => console.trace(result),
+      (result) => console.error(result),
+    )
   }
 
   openShareDialog(): void {
     const navigator = window.navigator as Navigator;
-    if (navigator.share) {
+    if (navigator.share && this.list) {
       navigator.share({
-        title: 'web.dev',
-        text: 'Check out web.dev.',
-        url: 'https://web.dev/',
+        title: this.list.name,
+        text: this.listReadableDescription,
+        url: location.href,
       })
         .then(() => console.log('Successful share'))
         .catch((error) => console.log('Error sharing', error));
     }
+  }
+
+  get listReadableDescription(): string {
+    let description = this.items.slice(0, 3).map((i) => i.value).join(', ');
+    if (this.items.length > 4) {
+      description = description.concat(' e mais ' + (this.items.length - 3) + ' itens.')
+    } else if (this.items.length > 3) {
+      description = description.concat(' e mais 1 item.')
+    }
+    return description;
   }
 
   scrollToBottom(): void {
@@ -80,21 +104,21 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     }
   }
 
-  appendItem($event: Event): void {
-    if (this.list && $event.target instanceof HTMLInputElement && $event.target.value) {
-      const textField = $event.target as HTMLInputElement;
-      const simpleItemCommand = {value: textField.value};
-      this._simpleItemService.appendItem(this.list.id, simpleItemCommand).subscribe((item) => {
+  appendItem(): void {
+    if (this.list && this.newItemForm && this.newItemForm.value['itemValue']) {
+      this._simpleItemService.appendItem(this.list.id, {value: this.newItemForm.value['itemValue']}).subscribe((item) => {
         console.trace(item)
         this.scrollToBottom();
-        textField.value = '';
+        this.newItemForm?.setValue({
+          itemValue: '',
+        })
       })
     }
   }
 
-  editLastItem($event: Event): void {
-    if ($event.target instanceof HTMLInputElement && $event.target.value) {
-      this.moveToPreviousInput($event.target);
+  editLastItem($event: Event, listItemElement: HTMLLIElement): void {
+    if ($event.target instanceof HTMLInputElement && !$event.target.value) {
+      this.moveToPreviousInput(listItemElement);
       this.scrollToBottom();
     }
   }
@@ -115,17 +139,6 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     }
   }
 
-  execute(command: SimpleListOperationCommand): void {
-    if (this.list) {
-      this._simpleListService.executeOperation(this.list.id, command).subscribe((result) => {
-        this.refreshByResult({
-          command: command,
-          resultItem: result.resultItem,
-        })
-      })
-    }
-  }
-
   refreshByResult(operationResult: SimpleListOperationResult): void {
     const command = operationResult.command;
     switch (command.operation) {
@@ -133,12 +146,12 @@ export class SimpleListPage implements OnInit, AfterViewInit {
         this.items.push(operationResult.resultItem);
         break;
       case "ADD":
-        if (command.index) {
+        if (command.index !== undefined) {
           this.items.splice(command.index, 0, operationResult.resultItem);
         }
         break;
       case "UPDATE":
-        if (command.index) {
+        if (command.index !== undefined) {
           const simpleItem = this.items[command.index];
           if (simpleItem) {
             simpleItem.value = operationResult.resultItem.value
@@ -147,35 +160,35 @@ export class SimpleListPage implements OnInit, AfterViewInit {
         }
         break;
       case "DELETE":
-        if (command.index) {
+        if (command.index !== undefined) {
           this.items.splice(command.index, 1);
         }
         break;
     }
   }
 
-  removeItemIfEmpty(index: number, $event: Event, focusPrevious = false): void {
+  removeItemIfEmpty(index: number, $event: Event, listItemElement: HTMLLIElement, focusPrevious = false): void {
     if ($event.target instanceof HTMLInputElement && !$event.target.value) {
       this.removeItem(index);
       if (focusPrevious) {
-        this.moveToPreviousInput($event.target);
+        this.moveToPreviousInput(listItemElement);
       }
     }
   }
 
-  listItemInputEnter(index: number, $event: Event): void {
+  listItemInputEnter(index: number, $event: Event, listItemElement: HTMLLIElement): void {
     if ($event.target instanceof HTMLInputElement && $event.target.value) {
       const targetInput = $event.target;
       const targetIndex = index + 1;
       if (targetIndex === this.items.length) {
-        this.moveToNextInput(targetInput);
+        this.moveToNextInput(listItemElement);
       } else if ((this.items.length > targetIndex && this.items[targetIndex].value) || this.items.length <= targetIndex) {
         this.addItem(targetIndex, '');
 
         // Foca o input adicionado
         setTimeout(() => {
           if (targetInput instanceof HTMLInputElement) {
-            this.moveToNextInput(targetInput);
+            this.moveToNextInput(listItemElement);
           }
         }, 200);
       }
@@ -183,10 +196,14 @@ export class SimpleListPage implements OnInit, AfterViewInit {
   }
 
   listItemInput($event: Event, index: number): void {
-    if (this.list && $event.target instanceof HTMLInputElement && $event.target.value) {
-      this._simpleItemService.updateItem(this.list.id, index, {value: $event.target.value}).subscribe((item) => {
-        console.trace(item)
-      })
+    if ($event.target instanceof HTMLInputElement && $event.target.value) {
+      this.operationCommandSubject.next({
+        operation: "UPDATE",
+        index: index,
+        item: {
+          value: $event.target.value,
+        }
+      });
     }
   }
 
@@ -197,40 +214,35 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     }
   }
 
-  listItemInputArrowUp($event: Event): void {
-    if ($event.target instanceof HTMLInputElement) {
-      this.moveToPreviousInput($event.target);
+  listItemInputArrowUp(listItemElement: HTMLLIElement): void {
+    this.moveToPreviousInput(listItemElement);
+  }
+
+  listItemInputArrowDown(listItemElement: HTMLLIElement): void {
+    this.moveToNextInput(listItemElement);
+  }
+
+  moveToNextInput(listItemElement: HTMLLIElement): void {
+    const nextListItemElement = listItemElement.nextElementSibling;
+    if (nextListItemElement && nextListItemElement instanceof HTMLLIElement) {
+      SimpleListPage.focusChildInput(nextListItemElement);
     }
   }
 
-  listItemInputArrowDown($event: Event): void {
-    if ($event.target instanceof HTMLInputElement) {
-      this.moveToNextInput($event.target);
+  moveToPreviousInput(listItemElement: HTMLLIElement): void {
+    const previousListItemElement = listItemElement.previousElementSibling;
+    if (previousListItemElement && previousListItemElement instanceof HTMLLIElement) {
+      SimpleListPage.focusChildInput(previousListItemElement);
     }
   }
 
-  moveToNextInput(targetInput: HTMLInputElement): void {
-    if (targetInput.parentElement && targetInput.parentElement.parentElement) {
-      const nextFormFieldElement = targetInput.parentElement.parentElement.nextElementSibling;
-      if (nextFormFieldElement && nextFormFieldElement instanceof HTMLLIElement) {
-        SimpleListPage.focusChildInput(nextFormFieldElement);
-      }
-    }
-  }
-
-  moveToPreviousInput(targetInput: HTMLInputElement): void {
-    if (targetInput.parentElement && targetInput.parentElement.parentElement) {
-      const nextFormFieldElement = targetInput.parentElement.parentElement.previousElementSibling;
-      if (nextFormFieldElement && nextFormFieldElement instanceof HTMLLIElement) {
-        SimpleListPage.focusChildInput(nextFormFieldElement);
-      }
-    }
-  }
-
-  private static focusChildInput(nextFormFieldElement: HTMLLIElement): void {
+  private static focusChildInput(nextFormFieldElement: HTMLLIElement, select = false): void {
     const inputChildren = nextFormFieldElement.getElementsByTagName('input');
     if (inputChildren.length === 1) {
       inputChildren[0].focus();
+      if (select) {
+        inputChildren[0].select();
+      }
     }
   }
 

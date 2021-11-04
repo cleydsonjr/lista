@@ -16,41 +16,48 @@
 </ng-container>
 
 <ul class="mdc-deprecated-list simple-list" #simpleList>
-  <li class="mdc-deprecated-list-item list-item" tabindex="0" *ngFor="let item of items; let i = index;">
+  <li class="mdc-deprecated-list-item list-item" tabindex="0" *ngFor="let item of items; let i = index;" #listItemElement>
     <span class="mdc-deprecated-list-item__ripple"></span>
     <span class="mdc-deprecated-list-item__text" style="width: 100%; display: inline-flex">
       <span style="font-weight: 500">{{i + 1}}.&nbsp;</span>
       <input class="list-item__input" [value]="item.value" type="text"
              (input)="listItemInput($event, i)"
-             (keyup.arrowUp)="listItemInputArrowUp($event)"
-             (keyup.arrowDown)="listItemInputArrowDown($event)"
-             (keyup.enter)="listItemInputEnter(i, $event)"
-             (keyup.backspace)="removeItemIfEmpty(i, $event, true)"
-             (blur)="removeItemIfEmpty(i, $event)"
+             (keyup.arrowUp)="listItemInputArrowUp(listItemElement)"
+             (keyup.arrowDown)="listItemInputArrowDown(listItemElement)"
+             (keyup.enter)="listItemInputEnter(i, $event, listItemElement)"
+             (keyup.backspace)="removeItemIfEmpty(i, $event, listItemElement, true)"
+             (blur)="removeItemIfEmpty(i, $event, listItemElement)"
              (focus)="listItemInputFocus($event)"
              maxlength="30">
     </span>
-    <!--        <span class="mdc-deprecated-list-item__secondary-text">{{item.dateCreated}}</span>-->
     <span class="mdc-deprecated-list-item__meta material-icons" aria-hidden="true" (click)="removeItem(i)">
       clear
     </span>
   </li>
 
-  <li class="new-item-text-filed-container">
-    <label class="mdc-text-field mdc-text-field--filled" style="width: 100%" #textField>
-      <span class="mdc-text-field__ripple"></span>
-      <span class="mdc-floating-label" id="my-label-id">Adicionar item</span>
-      <input class="mdc-text-field__input" type="text" aria-labelledby="my-label-id"
-             (keyup.enter)="appendItem($event)"
-             (keyup.backspace)="editLastItem($event)"
-             (keyup.arrowUp)="listItemInputArrowUp($event)"
-             (keyup.arrowDown)="listItemInputArrowDown($event)"
-             maxlength="30">
-      <span class="mdc-line-ripple"></span>
-    </label>
+  <li class="new-item-form-container" #listItemElement>
+    <form (ngSubmit)="appendItem()" class="new-item-form" #newItemForm="ngForm">
+      <label class="mdc-text-field mdc-text-field--filled" style="flex: 1" #textField>
+        <span class="mdc-text-field__ripple"></span>
+        <span class="mdc-floating-label" id="my-label-id">Adicionar item</span>
+        <input ngModel type="text"
+               autocomplete="off"
+               class="mdc-text-field__input"
+               aria-labelledby="my-label-id"
+               name="itemValue"
+               (keyup.backspace)="editLastItem($event, listItemElement)"
+               (keyup.arrowUp)="listItemInputArrowUp(listItemElement)"
+               (keyup.arrowDown)="listItemInputArrowDown(listItemElement)"
+               maxlength="30">
+        <span class="mdc-line-ripple"></span>
 
-    <div class="mdc-text-field-helper-line">
-      <div class="mdc-text-field-character-counter"></div>
-    </div>
+        <div class="mdc-text-field-helper-line">
+          <div class="mdc-text-field-character-counter"></div>
+        </div>
+      </label>
+      <button type="submit" class="mdc-button mdc-button--raised new-item-form__submit-button" [disabled]="!newItemForm.value['itemValue']">
+        <span class="material-icons mdc-button__label">send</span>
+      </button>
+    </form>
   </li>
 </ul>

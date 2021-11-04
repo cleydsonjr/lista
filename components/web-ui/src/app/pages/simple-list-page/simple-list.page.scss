@@ -8,12 +8,15 @@
 @use "~@material/typography/mdc-typography";
 @use "~@material/list";
 @use "~@material/icon-button/styles" as icon-button-styles;
+@use "~@material/button/styles" as button-styles;
 @use '~material-icons/iconfont/filled';
 @use "~@material/floating-label/mdc-floating-label";
 @use "~@material/line-ripple/mdc-line-ripple";
 @use "~@material/notched-outline/mdc-notched-outline";
 @use "~@material/textfield";
+@use "~@material/fab";
 
+@include fab.core-styles;
 @include textfield.core-styles;
 @include list.deprecated-core-styles;
 
@@ -31,12 +34,31 @@
   padding-top: 0;
 }
 
-.new-item-text-filed-container {
+.new-item-form-container {
   position: sticky;
   bottom: 0;
   background-color: white;
   padding: 12px 16px 4px;
   border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.new-item-form {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+  gap: 10px;
+  width: 100%;
+
+  &__submit-button {
+    border-radius: 18px;
+    min-width: 36px;
+    padding: 0 8px;
+
+    .mdc-button__label {
+      font-size: 20px
+    }
+  }
 }
 
 .header {
