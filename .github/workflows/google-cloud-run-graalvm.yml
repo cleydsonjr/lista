@@ -40,7 +40,8 @@ jobs:
           TESTCONTAINERS_RYUK_DISABLED: true
         run: |
           export DOCKER_IMAGE=`echo "${GCLOUD_GCR}/${GCLOUD_PROJECT_ID}/${GCLOUD_IMAGE_REPOSITORY}/demo" | sed -e 's#//#/#' -e 's#^/##'`
-          ./components/server/gradlew check dockerPushNative --no-daemon
+          cd ./components/server
+          ./gradlew check dockerPushNative --no-daemon
       - name: Deploy Cloud Run
         run: |
           DOCKER_IMAGE_REPOSITORY=$(docker images --format "{{.Repository}}" | grep demo)

@@ -46,3 +46,12 @@ curl https://demo-__________run.app/demo
 ## Feature github-workflow-google-cloud-run-graalvm documentation
 
 - [https://docs.github.com/en/free-pro-team@latest/actions](https://docs.github.com/en/free-pro-team@latest/actions)
+
+
+```
+docker run --rm \
+-v ${PWD}:/local openapitools/openapi-generator-cli generate \
+-i /local/components/server/build/classes/java/main/META-INF/swagger/zaps-list-0.0.1.yml \
+-g typescript-angular \
+-o /local/components/js-client
+```
