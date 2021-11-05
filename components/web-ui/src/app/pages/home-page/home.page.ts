@@ -1,5 +1,5 @@
 import {Component} from '@angular/core';
-import {SimpleListService} from "@zaps/lists-angular-client";
+import {SimpleList, SimpleListService, SimpleListType} from "@zaps/lists-angular-client";
 import {Router} from "@angular/router";
 
 @Component({
@@ -9,16 +9,21 @@ import {Router} from "@angular/router";
 })
 export class HomePage {
 
+  SimpleListType = SimpleListType;
+
   constructor(
-    private readonly router: Router,
-    private readonly simpleListService: SimpleListService,
+    private readonly _router: Router,
+    private readonly _simpleListService: SimpleListService,
   ) {
   }
 
-  createNewList(): void {
-    this.simpleListService.addSimpleList({name: ''}).subscribe((newList) => {
-      this.router.navigate([newList.id])
-    })
+  createNewList(type: SimpleListType): void {
+    this._simpleListService.addSimpleList({name: '', type: type}).subscribe(
+      (newList: SimpleList) => {
+        this._router.navigate([newList.id])
+      },
+      (error: unknown) => console.error(error)
+    )
   }
 
 }

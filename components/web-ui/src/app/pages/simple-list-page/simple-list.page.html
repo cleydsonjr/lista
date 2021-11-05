@@ -1,42 +1,76 @@
-<ng-container *ngIf="list">
-  <header class="header">
-    <section class="header__section">
-      <h1 class="mdc-typography--headline6 header__title">{{list.name}}</h1>
-      <h2 class="mdc-typography--subtitle2 header__subtitle">
-        <ng-container *ngIf="items.length === 0">Nenhum item</ng-container>
-        <ng-container *ngIf="items.length === 1">1 item</ng-container>
-        <ng-container *ngIf="items.length > 1">{{items.length}} itens</ng-container>
-      </h2>
-    </section>
-    <span style="flex: 1"></span>
-    <section>
-      <button class="mdc-icon-button material-icons mdc-top-app-bar__action-item--unbounded" aria-label="Share" (click)="openShareDialog()" *ngIf="hasShareApi">share</button>
-    </section>
-  </header>
-</ng-container>
+<header class="header">
+  <section class="header__section">
+    <h1 class="mdc-typography--headline6 header__title" *ngIf="list">{{list.name}}</h1>
+    <h2 class="mdc-typography--subtitle2 header__subtitle">
+      {{listReadableLegend}}
+    </h2>
+  </section>
+  <span style="flex: 1"></span>
+  <section class="mdc-menu-surface--anchor">
+    <button class="mdc-icon-button material-icons" aria-label="Share" (click)="openShareDialog()" *ngIf="hasShareApi">share</button>
+    <button class="mdc-icon-button material-icons" aria-label="Share" (click)="openContextMenu()">more_vert</button>
+
+    <div class="mdc-menu mdc-menu-surface" #contextMenuDiv>
+      <ul class="mdc-deprecated-list" role="menu" aria-hidden="true" aria-orientation="vertical" tabindex="-1">
+        <li class="mdc-deprecated-list-item" role="menuitem">
+          <span class="mdc-deprecated-list-item__ripple"></span>
+          <span class="mdc-deprecated-list-item__text">Informações</span>
+        </li>
+        <li class="mdc-deprecated-list-item" role="menuitem" (click)="copyListToClipboard()">
+          <span class="mdc-deprecated-list-item__ripple"></span>
+          <span class="mdc-deprecated-list-item__text">Copiar lista como texto</span>
+        </li>
+        <li class="mdc-deprecated-list-item" role="menuitem" (click)="duplicateList()">
+          <span class="mdc-deprecated-list-item__ripple"></span>
+          <span class="mdc-deprecated-list-item__text">Duplicar lista</span>
+        </li>
+        <li class="mdc-deprecated-list-divider" role="separator"></li>
+        <li class="mdc-deprecated-list-item" role="menuitem" [routerLink]="['/']">
+          <span class="mdc-deprecated-list-item__ripple"></span>
+          <span class="mdc-deprecated-list-item__text">Criar nova lista</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+</header>
 
 <ul class="mdc-deprecated-list simple-list" #simpleList>
   <li class="mdc-deprecated-list-item list-item" tabindex="0" *ngFor="let item of items; let i = index;" #listItemElement>
     <span class="mdc-deprecated-list-item__ripple"></span>
-    <span class="mdc-deprecated-list-item__text" style="width: 100%; display: inline-flex">
+    <span class="mdc-deprecated-list-item__text" style="flex: 1; display: inline-flex">
       <span style="font-weight: 500">{{i + 1}}.&nbsp;</span>
       <input class="list-item__input" [value]="item.value" type="text"
-             (input)="listItemInput($event, i)"
+             (input)="listItemInput($event, i, item)"
              (keyup.arrowUp)="listItemInputArrowUp(listItemElement)"
              (keyup.arrowDown)="listItemInputArrowDown(listItemElement)"
              (keyup.enter)="listItemInputEnter(i, $event, listItemElement)"
              (keyup.backspace)="removeItemIfEmpty(i, $event, listItemElement, true)"
              (blur)="removeItemIfEmpty(i, $event, listItemElement)"
              (focus)="listItemInputFocus($event)"
-             maxlength="30">
+             maxlength="25">
     </span>
+    <ng-container *ngIf="list && list.type === 'PEOPLE'">
+    <span class="mdc-evolution-chip" style="border-radius: 4px" role="row" id="c0" *ngIf="item.additional" (click)="minusOne(i, item)">
+      <span class="mdc-evolution-chip__cell mdc-evolution-chip__cell--primary" role="gridcell">
+        <button class="mdc-evolution-chip__action mdc-evolution-chip__action--primary" type="button" tabindex="0">
+          <span class="mdc-evolution-chip__ripple mdc-evolution-chip__ripple--primary"></span>
+          <span class="mdc-evolution-chip__text-label">{{item.additional + 1}}</span>
+        </button>
+      </span>
+    </span>
+
+      <span class="mdc-deprecated-list-item__meta material-icons" [class.list-item__meta-disabled]="item.additional && item.additional >= 8" aria-label="Mais um" (click)="(!item.additional || item.additional < 8) && plusOne(i, item)">
+      plus_one
+    </span>
+    </ng-container>
+
     <span class="mdc-deprecated-list-item__meta material-icons" aria-hidden="true" (click)="removeItem(i)">
       clear
     </span>
   </li>
 
   <li class="new-item-form-container" #listItemElement>
-    <form (ngSubmit)="appendItem()" class="new-item-form" #newItemForm="ngForm">
+    <form (ngSubmit)="appendItem(); newItemInput.focus()" class="new-item-form" #newItemForm="ngForm">
       <label class="mdc-text-field mdc-text-field--filled" style="flex: 1" #textField>
         <span class="mdc-text-field__ripple"></span>
         <span class="mdc-floating-label" id="my-label-id">Adicionar item</span>
@@ -45,10 +79,12 @@
                class="mdc-text-field__input"
                aria-labelledby="my-label-id"
                name="itemValue"
+               [disabled]="items.length >=25"
+               (paste)="onPasteText($event)"
                (keyup.backspace)="editLastItem($event, listItemElement)"
                (keyup.arrowUp)="listItemInputArrowUp(listItemElement)"
                (keyup.arrowDown)="listItemInputArrowDown(listItemElement)"
-               maxlength="30">
+               maxlength="25" #newItemInput>
         <span class="mdc-line-ripple"></span>
 
         <div class="mdc-text-field-helper-line">

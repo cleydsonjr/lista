@@ -37,6 +37,9 @@ public class SimpleList {
 	@Size(max = 30)
 	private String name;
 
+	@NotNull
+	private SimpleListType type = SimpleListType.ITEMS;
+
 	@Size(max = 25)
 	@TypeDef(type = DataType.JSON)
 	private List<SimpleItem> items = new ArrayList<>();

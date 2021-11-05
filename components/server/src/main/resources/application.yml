@@ -10,6 +10,9 @@ micronaut:
         enabled: true
         mapping: /**
         paths: classpath:public
+  server:
+    cors:
+      enabled: true
 datasources:
   default:
     url: jdbc:h2:./zaps-list;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE

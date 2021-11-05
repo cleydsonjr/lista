@@ -25,4 +25,6 @@ public class SimpleItemDto {
 	@NotNull
 	private String value;
 
+	private Integer additional;
+
 }

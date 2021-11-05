@@ -9,14 +9,16 @@
 @use "~@material/list";
 @use "~@material/icon-button/styles" as icon-button-styles;
 @use "~@material/button/styles" as button-styles;
+@use "~@material/chips/styles" as chips-styles;
 @use '~material-icons/iconfont/filled';
 @use "~@material/floating-label/mdc-floating-label";
 @use "~@material/line-ripple/mdc-line-ripple";
 @use "~@material/notched-outline/mdc-notched-outline";
 @use "~@material/textfield";
-@use "~@material/fab";
+@use "~@material/list/mdc-list";
+@use "~@material/menu-surface/mdc-menu-surface";
+@use "~@material/menu/mdc-menu";
 
-@include fab.core-styles;
 @include textfield.core-styles;
 @include list.deprecated-core-styles;
 
@@ -34,11 +36,20 @@
   padding-top: 0;
 }
 
+.list-item {
+  justify-content: space-between;
+  gap: 10px;
+
+  &__meta-disabled {
+    opacity: 0.5;
+  }
+}
+
 .new-item-form-container {
   position: sticky;
   bottom: 0;
   background-color: white;
-  padding: 12px 16px 4px;
+  padding: 10px 12px;
   border-top: 1px solid rgba(0, 0, 0, 0.12);
 }
 
@@ -119,5 +130,6 @@
     color: #000;
     height: 64px;
     padding: 8px 12px;
+    border-radius: 12px 12px 0 0;
   }
 }

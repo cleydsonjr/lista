@@ -15,3 +15,4 @@ out/
 *.db
 !src/main/resources/.gitkeep
 src/main/resources/public/**
+/src/main/generated/

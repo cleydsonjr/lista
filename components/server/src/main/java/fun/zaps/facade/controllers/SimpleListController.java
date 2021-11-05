@@ -9,6 +9,7 @@ import fun.zaps.facade.dtos.SimpleListDto;
 import fun.zaps.facade.dtos.SimpleListOperationResultDto;
 import fun.zaps.facade.executors.SimpleListOperationsExecutor;
 import fun.zaps.facade.mappers.SimpleListMapper;
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.http.annotation.*;
 import io.micronaut.transaction.annotation.ReadOnly;
 import io.swagger.v3.oas.annotations.Operation;
@@ -52,18 +53,25 @@ public class SimpleListController {
 	}
 
 	@Operation(
-			description = "Adiciona uma nova lista."
+			description = "Adiciona uma nova lista. Caso informado um sourceId válido os itens serão copiados."
 	)
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", description = "Operacao bem sucedida"),
 			@ApiResponse(responseCode = "404", description = "Recurso não encontrado")
 	})
 	@Post()
-	SimpleListDto addSimpleList(@Body @Valid SimpleListCommand command) {
-		SimpleList simpleList = simpleListMapper.fromDto(command);
-		simpleList = simpleListService.save(simpleList);
+	SimpleListDto addSimpleList(@Body @Valid SimpleListCommand command, @QueryValue @Nullable String sourceId) {
+		final SimpleList simpleList = simpleListMapper.fromDto(command);
 
-		return simpleListMapper.toDto(simpleList);
+		if (sourceId != null) {
+			simpleListService.findByEncodedId(sourceId).ifPresent((sourceList) -> {
+				simpleList.setName(command.getName() == null || command.getName().isEmpty() ? sourceList.getName() : command.getName());
+				simpleList.setType(sourceList.getType());
+				simpleList.getItems().addAll(sourceList.getItems());
+			});
+		}
+
+		return simpleListMapper.toDto(simpleListService.save(simpleList));
 	}
 
 	@Operation(summary = "Atualiza uma lista. Permite atualizar apenas o nome.")

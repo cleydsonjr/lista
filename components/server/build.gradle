@@ -4,7 +4,7 @@ plugins {
 	id("io.micronaut.application") version "2.0.6"
 }
 
-version = "0.1"
+version = "0.0.9"
 group = "fun.zaps"
 
 repositories {
@@ -55,5 +55,12 @@ java {
 	targetCompatibility = JavaVersion.toVersion("11")
 }
 
+dockerBuild {
+	images.add("${System.env.DOCKER_IMAGE ?: project.name}:$project.version")
+}
+
+dockerBuildNative {
+	images.add("${System.env.DOCKER_IMAGE ?: project.name}:$project.version")
+}
 
 

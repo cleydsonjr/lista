@@ -55,7 +55,7 @@ public class SimpleListOperationsExecutor {
 				maybeResultItem = simpleItemService.append(listId, commandItem.getValue());
 				break;
 			case UPDATE:
-				maybeResultItem = simpleItemService.update(listId, command.getIndex(), commandItem.getValue());
+				maybeResultItem = simpleItemService.update(listId, command.getIndex(), commandItem.getValue(), commandItem.getAdditional());
 				break;
 			case DELETE:
 				maybeResultItem = simpleItemService.delete(listId, command.getIndex());

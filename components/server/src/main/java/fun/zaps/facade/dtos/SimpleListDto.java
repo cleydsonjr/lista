@@ -1,5 +1,6 @@
 package fun.zaps.facade.dtos;
 
+import fun.zaps.business.domain.SimpleListType;
 import io.micronaut.core.annotation.Introspected;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -27,6 +28,9 @@ public class SimpleListDto {
 	@NotBlank
 	@Size(max = 25)
 	private String name;
+
+	@NotNull
+	private SimpleListType type;
 
 	@Size(max = 25)
 	private List<SimpleItemDto> items;

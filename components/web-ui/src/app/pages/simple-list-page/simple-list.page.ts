@@ -1,12 +1,29 @@
 import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {SimpleItem, SimpleItemService, SimpleList, SimpleListOperationCommand, SimpleListOperationResult, SimpleListService} from "@zaps/lists-angular-client";
+import {SimpleItem, SimpleItemService, SimpleList, SimpleListOperationCommand, SimpleListOperationResult, SimpleListService, SimpleListType} from "@zaps/lists-angular-client";
 import {MDCTextField} from "@material/textfield";
 import {ActivatedRoute, ParamMap, Router} from "@angular/router";
-import {debounceTime, filter, map, mergeMap, tap} from "rxjs/operators";
+import {concatMap, debounceTime, filter, map, mergeMap, take, tap} from "rxjs/operators";
 import {SimpleListDataService} from "../../data/simple-list-data.service";
 import {WebSocketSubject} from "rxjs/webSocket";
-import {Subject} from "rxjs";
+import {from, Subject} from "rxjs";
 import {NgForm} from "@angular/forms";
+import {MDCMenu} from '@material/menu';
+import * as copy from "copy-to-clipboard";
+
+const NO_ITEM: Readonly<{ [key in SimpleListType]: string }> = {
+  ITEMS: 'Nenhum item',
+  PEOPLE: 'Nenhuma pessoa',
+}
+
+const ONE_ITEM: Readonly<{ [key in SimpleListType]: string }> = {
+  ITEMS: '1 item',
+  PEOPLE: '1 pessoa',
+}
+
+const ITEMS: Readonly<{ [key in SimpleListType]: string }> = {
+  ITEMS: 'itens',
+  PEOPLE: 'pessoas',
+}
 
 @Component({
   selector: 'app-simple-list-page',
@@ -23,6 +40,9 @@ export class SimpleListPage implements OnInit, AfterViewInit {
   @ViewChild('simpleList') simpleListRef?: ElementRef<HTMLUListElement>;
   @ViewChild('alertDialog') alertDialogRef?: ElementRef<HTMLDivElement>;
   @ViewChild('newItemForm') newItemForm?: NgForm;
+  @ViewChild('contextMenuDiv') contextMenuRef?: ElementRef<HTMLDivElement>;
+
+  contextMenu?: MDCMenu;
 
   operationCommandSubject: Subject<SimpleListOperationCommand> = new Subject<SimpleListOperationCommand>();
 
@@ -60,6 +80,9 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     if (this.textFieldRef) {
       MDCTextField.attachTo(this.textFieldRef.nativeElement);
     }
+    if (this.contextMenuRef) {
+      this.contextMenu = MDCMenu.attachTo(this.contextMenuRef.nativeElement);
+    }
   }
 
   subscribeToOperationCommand(listId: string): void {
@@ -85,6 +108,33 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     }
   }
 
+  openContextMenu(): void {
+    if (this.contextMenu) {
+      this.contextMenu.open = true
+    }
+  }
+
+  copyListToClipboard(): void {
+    if (this.list) {
+      const listText = '*' + this.list.name + '*' + '\n\n' +
+        this.items
+          .map((item, index) => (index + 1) + '. ' + item.value + (item.additional ? ' (+' + item.additional + ')' : ''))
+          .join('\n');
+      copy(listText);
+    }
+  }
+
+  duplicateList(): void {
+    if (this.list) {
+      this._simpleListService.addSimpleList({name: null, type: null}, this.list.id).subscribe(
+        (newList: SimpleList) => {
+          this._router.navigate([newList.id])
+        },
+        (error: unknown) => console.error(error)
+      )
+    }
+  }
+
   get listReadableDescription(): string {
     let description = this.items.slice(0, 3).map((i) => i.value).join(', ');
     if (this.items.length > 4) {
@@ -93,6 +143,22 @@ export class SimpleListPage implements OnInit, AfterViewInit {
       description = description.concat(' e mais 1 item.')
     }
     return description;
+  }
+
+  get listReadableLegend(): string {
+    if (this.list) {
+      const length = this.items.reduce((a, b) => a + (b ? (1 + (b.additional || 0)) : 0), 0)
+
+      if (length === 0) {
+        return NO_ITEM[this.list.type];
+      } else if (length === 1) {
+        return ONE_ITEM[this.list.type];
+      } else {
+        return length + ' ' + ITEMS[this.list.type];
+      }
+    } else {
+      return '';
+    }
   }
 
   scrollToBottom(): void {
@@ -106,7 +172,7 @@ export class SimpleListPage implements OnInit, AfterViewInit {
 
   appendItem(): void {
     if (this.list && this.newItemForm && this.newItemForm.value['itemValue']) {
-      this._simpleItemService.appendItem(this.list.id, {value: this.newItemForm.value['itemValue']}).subscribe((item) => {
+      this._simpleItemService.appendItem(this.list.id, {value: this.newItemForm.value['itemValue'], additional: 0}).subscribe((item: SimpleItem) => {
         console.trace(item)
         this.scrollToBottom();
         this.newItemForm?.setValue({
@@ -125,7 +191,7 @@ export class SimpleListPage implements OnInit, AfterViewInit {
 
   removeItem(index: number): void {
     if (this.list) {
-      this._simpleItemService.deleteItem(this.list.id, index).subscribe((item) => {
+      this._simpleItemService.deleteItem(this.list.id, index).subscribe((item: SimpleItem) => {
         console.trace(item)
       })
     }
@@ -133,7 +199,7 @@ export class SimpleListPage implements OnInit, AfterViewInit {
 
   addItem(index: number, value: string): void {
     if (this.list) {
-      this._simpleItemService.addItem(this.list.id, index, {value: value}).subscribe((item) => {
+      this._simpleItemService.addItem(this.list.id, index, {value: value, additional: 0}).subscribe((item: SimpleItem) => {
         console.trace(item)
       })
     }
@@ -155,6 +221,7 @@ export class SimpleListPage implements OnInit, AfterViewInit {
           const simpleItem = this.items[command.index];
           if (simpleItem) {
             simpleItem.value = operationResult.resultItem.value
+            simpleItem.additional = operationResult.resultItem.additional
             simpleItem.dateUpdated = operationResult.resultItem.dateUpdated
           }
         }
@@ -195,13 +262,14 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     }
   }
 
-  listItemInput($event: Event, index: number): void {
+  listItemInput($event: Event, index: number, item: SimpleItem): void {
     if ($event.target instanceof HTMLInputElement && $event.target.value) {
       this.operationCommandSubject.next({
         operation: "UPDATE",
         index: index,
         item: {
           value: $event.target.value,
+          additional: item.additional,
         }
       });
     }
@@ -246,4 +314,50 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     }
   }
 
+  plusOne(index: number, item: SimpleItem): void {
+    this.operationCommandSubject.next({
+      operation: "UPDATE",
+      index: index,
+      item: {
+        value: item.value,
+        additional: (item.additional || 0) + 1,
+      }
+    });
+  }
+
+  minusOne(index: number, item: SimpleItem): void {
+    if (item.additional) {
+      this.operationCommandSubject.next({
+        operation: "UPDATE",
+        index: index,
+        item: {
+          value: item.value,
+          additional: item.additional - 1,
+        }
+      });
+    }
+  }
+
+  onPasteText($event: ClipboardEvent): void {
+    if (this.list && $event.clipboardData) {
+      const text = $event.clipboardData.getData("text/plain");
+      if (text.match(/\n/g)) {
+        $event.preventDefault();
+        $event.stopPropagation();
+
+        const newItensValues = text.split(/\r?\n/g)
+        const listId = this.list.id;
+
+        from(newItensValues).pipe(
+          map((itemValue) => itemValue.trim().replace(/^\d+\./mg, '').slice(0, 25)),
+          filter((text => text.trim() !== '')),
+          take(25 - this.items.length),
+          concatMap((itemValue) => this._simpleItemService.appendItem(listId, {value: itemValue, additional: 0}))
+        ).subscribe((item: SimpleItem) => {
+          console.trace(item)
+          this.scrollToBottom();
+        })
+      }
+    }
+  }
 }

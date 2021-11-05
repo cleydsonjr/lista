@@ -2,6 +2,7 @@ package fun.zaps.business.services;
 
 import fun.zaps.business.domain.SimpleItem;
 import fun.zaps.business.domain.SimpleList;
+import io.micronaut.core.annotation.Nullable;
 import jakarta.inject.Singleton;
 
 import javax.inject.Inject;
@@ -57,13 +58,15 @@ public class SimpleItemService {
 	public Optional<SimpleItem> update(
 			@NotNull String listEncodedId,
 			@NotNull Integer index,
-			@NotNull @Size(max = 25) String value
+			@NotNull @Size(max = 30) String value,
+			@Nullable Integer additional
 	) {
 		Optional<SimpleList> maybeList = simpleListService.findByEncodedId(listEncodedId);
 
 		return maybeList.map(list -> {
 			SimpleItem simpleItem = list.getItems().get(index);
 			simpleItem.setValue(value);
+			simpleItem.setAdditional(additional);
 			simpleItem.setDateUpdated(Instant.now());
 			simpleListService.update(list);
 
