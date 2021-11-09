@@ -25,14 +25,20 @@ public class SimpleListDto {
 	private Instant dateCreated;
 
 	@NotNull
+	private Instant dateUpdated;
+
+	@NotNull
 	@NotBlank
-	@Size(max = 25)
+	@Size(max = 30)
 	private String name;
+
+	@Size(max = 144)
+	private String description;
 
 	@NotNull
 	private SimpleListType type;
 
-	@Size(max = 25)
+	@Size(max = 50)
 	private List<SimpleItemDto> items;
 
 }

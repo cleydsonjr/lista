@@ -20,6 +20,10 @@ public class SimpleListCommand {
 	private String name;
 
 	@Nullable
+	@Size(max = 144)
+	private String description;
+
+	@Nullable
 	private SimpleListType type = SimpleListType.ITEMS;
 
 }

@@ -1,7 +1,7 @@
 micronaut:
-#  ssl:
-#    enabled: true
-#    buildSelfSigned: true
+  #  ssl:
+  #    enabled: true
+  #    buildSelfSigned: true
   application:
     name: zaps-list
   router:
@@ -13,14 +13,16 @@ micronaut:
   server:
     cors:
       enabled: true
+
 datasources:
   default:
-    url: jdbc:h2:./zaps-list;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
-    driverClassName: org.h2.Driver
-    username: sa
-    password: ''
-    schema-generate: create
-    dialect: H2
+    url: jdbc:postgresql:${POSTGRES_URL:zaps-list}
+    driverClassName: org.postgresql.Driver
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:fibo123}
+    schema-generate: CREATE
+    dialect: POSTGRES
+
 
 jackson:
   serializationInclusion: NON_NULL # Não permite que objetos nulos sejam retornados em JSON output

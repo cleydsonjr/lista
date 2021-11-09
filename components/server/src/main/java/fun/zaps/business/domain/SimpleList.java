@@ -1,5 +1,6 @@
 package fun.zaps.business.domain;
 
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.data.annotation.DateCreated;
 import io.micronaut.data.annotation.DateUpdated;
 import io.micronaut.data.annotation.TypeDef;
@@ -7,9 +8,7 @@ import io.micronaut.data.model.DataType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -37,10 +36,15 @@ public class SimpleList {
 	@Size(max = 30)
 	private String name;
 
+	@Nullable
+	@Size(max = 144)
+	private String description;
+
 	@NotNull
+	@Enumerated(EnumType.STRING)
 	private SimpleListType type = SimpleListType.ITEMS;
 
-	@Size(max = 25)
+	@Size(max = 50)
 	@TypeDef(type = DataType.JSON)
 	private List<SimpleItem> items = new ArrayList<>();
 

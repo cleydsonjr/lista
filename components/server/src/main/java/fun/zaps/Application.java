@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.servers.Server;
 @OpenAPIDefinition(
 		info = @Info(
 				title = "zaps-list",
-				version = "0.0.1"
+				version = "0.0.11"
 		),
 		servers = @Server(
 				url = "http://localhost:8080/api"

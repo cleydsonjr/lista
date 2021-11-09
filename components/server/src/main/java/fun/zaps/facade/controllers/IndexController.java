@@ -8,8 +8,10 @@ import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Produces;
 import io.micronaut.http.server.types.files.StreamedFile;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.inject.Inject;
 
+@Hidden
 @Controller("/")
 public class IndexController {
 	@Inject
