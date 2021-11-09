@@ -9,6 +9,7 @@ import {from, Subject} from "rxjs";
 import {NgForm} from "@angular/forms";
 import {MDCMenu} from '@material/menu';
 import * as copy from "copy-to-clipboard";
+import {Key} from "ts-key-enum";
 
 const NO_ITEM: Readonly<{ [key in SimpleListType]: string }> = {
   ITEMS: 'Nenhum item',
@@ -25,6 +26,9 @@ const ITEMS: Readonly<{ [key in SimpleListType]: string }> = {
   PEOPLE: 'pessoas',
 }
 
+const MAX_LIST_LENGTH = 50;
+const MAX_ITEM_VALUE_LENGTH = 25;
+
 @Component({
   selector: 'app-simple-list-page',
   templateUrl: './simple-list.page.html',
@@ -40,9 +44,15 @@ export class SimpleListPage implements OnInit, AfterViewInit {
   @ViewChild('simpleList') simpleListRef?: ElementRef<HTMLUListElement>;
   @ViewChild('alertDialog') alertDialogRef?: ElementRef<HTMLDivElement>;
   @ViewChild('newItemForm') newItemForm?: NgForm;
+  @ViewChild('editListForm') editListForm?: NgForm;
   @ViewChild('contextMenuDiv') contextMenuRef?: ElementRef<HTMLDivElement>;
 
   contextMenu?: MDCMenu;
+  infoPanelOpen = false;
+  infoPanelEdit = false;
+
+  maxListLength = MAX_LIST_LENGTH;
+  maxItemValueLength = MAX_ITEM_VALUE_LENGTH;
 
   operationCommandSubject: Subject<SimpleListOperationCommand> = new Subject<SimpleListOperationCommand>();
 
@@ -52,6 +62,7 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     private readonly _simpleListService: SimpleListService,
     private readonly _simpleItemService: SimpleItemService,
     private readonly _simpleListDataService: SimpleListDataService,
+    private readonly _elementRef: ElementRef
   ) {
   }
 
@@ -69,6 +80,9 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     ).subscribe(((list: SimpleList) => {
       this.list = list;
       this.items = list.items;
+      if (this.editListForm) {
+        this.editListForm.setValue({name: list.name, description: list.description || ''})
+      }
       this.subscribeToOperationCommand(list.id);
       setTimeout(() => {
         this.scrollToBottom();
@@ -78,19 +92,24 @@ export class SimpleListPage implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     if (this.textFieldRef) {
-      MDCTextField.attachTo(this.textFieldRef.nativeElement);
+      this._elementRef.nativeElement.querySelectorAll('label.mdc-text-field').forEach((labelElement: HTMLLabelElement) => MDCTextField.attachTo(labelElement));
     }
     if (this.contextMenuRef) {
       this.contextMenu = MDCMenu.attachTo(this.contextMenuRef.nativeElement);
     }
+    document.addEventListener('keyup', (event) => {
+      if (event.key == Key.Escape) {
+        this.infoPanelOpen = false;
+      }
+    })
   }
 
   subscribeToOperationCommand(listId: string): void {
     this.operationCommandSubject.pipe(
-      debounceTime(500),
+      debounceTime(400),
       mergeMap((command) => this._simpleListService.executeOperation(listId, command))
     ).subscribe(
-      (result) => console.trace(result),
+      (result) => console.debug(result),
       (result) => console.error(result),
     )
   }
@@ -126,7 +145,7 @@ export class SimpleListPage implements OnInit, AfterViewInit {
 
   duplicateList(): void {
     if (this.list) {
-      this._simpleListService.addSimpleList({name: null, type: null}, this.list.id).subscribe(
+      this._simpleListService.addSimpleList({name: null, type: null, description: null}, this.list.id).subscribe(
         (newList: SimpleList) => {
           this._router.navigate([newList.id])
         },
@@ -173,7 +192,7 @@ export class SimpleListPage implements OnInit, AfterViewInit {
   appendItem(): void {
     if (this.list && this.newItemForm && this.newItemForm.value['itemValue']) {
       this._simpleItemService.appendItem(this.list.id, {value: this.newItemForm.value['itemValue'], additional: 0}).subscribe((item: SimpleItem) => {
-        console.trace(item)
+        console.debug(item)
         this.scrollToBottom();
         this.newItemForm?.setValue({
           itemValue: '',
@@ -192,7 +211,7 @@ export class SimpleListPage implements OnInit, AfterViewInit {
   removeItem(index: number): void {
     if (this.list) {
       this._simpleItemService.deleteItem(this.list.id, index).subscribe((item: SimpleItem) => {
-        console.trace(item)
+        console.debug(item)
       })
     }
   }
@@ -200,7 +219,7 @@ export class SimpleListPage implements OnInit, AfterViewInit {
   addItem(index: number, value: string): void {
     if (this.list) {
       this._simpleItemService.addItem(this.list.id, index, {value: value, additional: 0}).subscribe((item: SimpleItem) => {
-        console.trace(item)
+        console.debug(item)
       })
     }
   }
@@ -349,15 +368,34 @@ export class SimpleListPage implements OnInit, AfterViewInit {
         const listId = this.list.id;
 
         from(newItensValues).pipe(
-          map((itemValue) => itemValue.trim().replace(/^\d+\./mg, '').slice(0, 25)),
+          map((itemValue) => itemValue.trim().replace(/^\d+\./mg, '').slice(0, this.maxItemValueLength)),
           filter((text => text.trim() !== '')),
-          take(25 - this.items.length),
+          take(this.maxListLength - this.items.length),
           concatMap((itemValue) => this._simpleItemService.appendItem(listId, {value: itemValue, additional: 0}))
         ).subscribe((item: SimpleItem) => {
-          console.trace(item)
+          console.debug(item)
           this.scrollToBottom();
         })
       }
+    }
+  }
+
+  updateListInfo(): void {
+    if (this.list && this.editListForm) {
+      const form = this.editListForm;
+      this._simpleListService.updateSimpleList(this.list.id, {...this.list, ...form.value}).subscribe((updatedList) => {
+        this.list = updatedList;
+        this.infoPanelEdit = false;
+        form.setValue({name: updatedList.name, description: updatedList.description});
+      })
+    }
+  }
+
+  cancelEdit(): void {
+    this.infoPanelEdit = false;
+
+    if (this.editListForm && this.list) {
+      this.editListForm.setValue({name: this.list.name, description: this.list.description || ''})
     }
   }
 }

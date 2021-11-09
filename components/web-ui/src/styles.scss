@@ -22,6 +22,7 @@ body {
 
 * {
   min-height: 0;
+  min-width: 0;
 }
 
 ::-webkit-scrollbar {
@@ -35,4 +36,50 @@ body {
 
 ::-webkit-scrollbar-track {
   background: hsla(0, 0%, 100%, .1);
+}
+
+
+.header {
+  background-color: #009688;
+  color: #FFF;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  box-sizing: border-box;
+  height: 56px;
+  padding: 4px;
+
+  &__section {
+    padding: 0 0 0 20px;
+
+    h1, h2, h3 {
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  &__title {
+    line-height: 22px !important;
+  }
+
+  &__subtitle {
+    font-weight: normal !important;
+    font-style: italic;
+    line-height: 20px !important;
+    padding-left: 2px !important;
+  }
+}
+
+@media only screen and (min-width: 1200px) {
+  .header {
+    background-color: rgb(237, 237, 237);
+    color: #000;
+    height: 64px;
+    padding: 8px 12px;
+    border-radius: 12px 12px 0 0;
+  }
 }

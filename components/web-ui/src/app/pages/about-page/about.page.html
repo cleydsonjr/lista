@@ -1,0 +1,37 @@
+<header class="header">
+  <button class="mdc-icon-button material-icons" *ngIf="navigated" (click)="goBack()">arrow_back</button>
+  <section class="header__section">
+    <h1 class="mdc-typography--headline6 header__title">Sobre o aplicativo</h1>
+  </section>
+  <span style="flex: 1"></span>
+</header>
+
+<div class="about-container">
+  <section class="info-section">
+    <h6 class="mdc-typography--headline6" style="margin: 0">Listas simples para WhatsApp</h6>
+    <p class="mdc-typography--body1" style="text-align: justify">
+      Já sofreu para montar uma lista de confirmados para o churrasco no grupo do WhatsApp?<br /><br />
+      Esse aplicativo é a solução definitiva para esse problema. Uma alternativa simples, gratuita e sem propagandas
+      para compartilhamento de listas interativas. Só criar sua lista e compartilhar o link no grupo.
+      <br /><br />
+      Por ser gratuito, existem algumas restrições: A quantidade de itens nas listas é no máximo 50 e as listas antigas
+      (mais de 3 meses sem alterações) serão excluídas. Se você precisa que a lista fique disponível por mais tempo,
+      provavelmente está usando a ferramenta errada, melhor exportar e salvar em um arquivo.
+    </p>
+  </section>
+
+  <section class="pix-section">
+    <p class="mdc-typography--body2" style="text-align: center">
+      Caso queria contribuir com a manutenção do projeto, mande um PIX de R$0,50 na chave abaixo:
+    </p>
+
+    <label class="mdc-text-field mdc-text-field--filled mdc-text-field--no-label" style="width: 360px; zoom: 0.9;" (click)="copyPix()">
+      <span class="mdc-text-field__ripple"></span>
+      <input class="mdc-text-field__input" type="text" placeholder="Placeholder text" aria-label="Label" [value]="pixKey" disabled>
+      <i class="material-icons mdc-text-field__icon" style="cursor: pointer">content_copy</i>
+      <span class="mdc-line-ripple"></span>
+    </label>
+
+    <small class="copy-info" [class.copy-info__shown]="displayCopyInfo">Copiado.</small>
+  </section>
+</div>

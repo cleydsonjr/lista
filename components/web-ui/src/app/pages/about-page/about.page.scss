@@ -1,0 +1,49 @@
+@use "~@material/textfield";
+@use "~@material/notched-outline/mdc-notched-outline";
+
+@include textfield.core-styles;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  height: 100%;
+}
+
+.about-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.info-section {
+  padding: 1rem 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+@media only screen and (min-width: 1200px) {
+  .info-section {
+    padding: 2rem 4rem;
+  }
+}
+
+.pix-section {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-info {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s, visibility 0.3s;
+
+  &__shown {
+    visibility: visible;
+    opacity: 1;
+  }
+}

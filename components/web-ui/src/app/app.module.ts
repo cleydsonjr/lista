@@ -9,18 +9,22 @@ import {DataModule} from "./data/data.module";
 import {ServiceWorkerModule} from '@angular/service-worker';
 import {environment} from '../environments/environment';
 import {FormsModule} from "@angular/forms";
+import {SharedModule} from "./shared/shared.module";
+import { AboutPage } from './pages/about-page/about.page';
 
 @NgModule({
   declarations: [
     AppComponent,
     HomePage,
-    SimpleListPage
+    SimpleListPage,
+    AboutPage
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     DataModule,
     FormsModule,
+    SharedModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
       enabled: environment.production,
       // Register the ServiceWorker as soon as the app is stable

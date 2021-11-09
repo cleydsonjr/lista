@@ -18,7 +18,7 @@ export class HomePage {
   }
 
   createNewList(type: SimpleListType): void {
-    this._simpleListService.addSimpleList({name: '', type: type}).subscribe(
+    this._simpleListService.addSimpleList({name: '', type: type, description: null}).subscribe(
       (newList: SimpleList) => {
         this._router.navigate([newList.id])
       },
