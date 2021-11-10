@@ -1,8 +1,8 @@
 package fun.zaps.facade.mappers;
 
+import fun.zaps.business.domain.SimpleList;
 import fun.zaps.facade.commands.SimpleListCommand;
 import fun.zaps.facade.dtos.SimpleListDto;
-import fun.zaps.business.domain.SimpleList;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "jsr330", unmappedTargetPolicy = ReportingPolicy.IGNORE)
@@ -19,6 +19,6 @@ public abstract class SimpleListMapper {
 
 	@Named("EncodedId")
 	public String mapId(Long id) {
-		return id != null ? Long.toString(id, Character.MAX_RADIX) : null;
+		return id != null ? new StringBuilder(Long.toString(id, Character.MAX_RADIX)).reverse().toString() : null;
 	}
 }

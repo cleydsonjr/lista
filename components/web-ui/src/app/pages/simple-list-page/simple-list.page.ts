@@ -11,19 +11,24 @@ import {MDCMenu} from '@material/menu';
 import * as copy from "copy-to-clipboard";
 import {Key} from "ts-key-enum";
 
-const NO_ITEM: Readonly<{ [key in SimpleListType]: string }> = {
+const NO_ITEM_LABEL: Readonly<{ [key in SimpleListType]: string }> = {
   ITEMS: 'Nenhum item',
   PEOPLE: 'Nenhuma pessoa',
 }
 
-const ONE_ITEM: Readonly<{ [key in SimpleListType]: string }> = {
+const ONE_ITEM_LABEL: Readonly<{ [key in SimpleListType]: string }> = {
   ITEMS: '1 item',
   PEOPLE: '1 pessoa',
 }
 
-const ITEMS: Readonly<{ [key in SimpleListType]: string }> = {
+const ITEMS_LABEL: Readonly<{ [key in SimpleListType]: string }> = {
   ITEMS: 'itens',
   PEOPLE: 'pessoas',
+}
+
+const ITEM_LABEL: Readonly<{ [key in SimpleListType]: string }> = {
+  ITEMS: 'item',
+  PEOPLE: 'pessoa',
 }
 
 const MAX_LIST_LENGTH = 50;
@@ -129,8 +134,19 @@ export class SimpleListPage implements OnInit, AfterViewInit {
 
   openContextMenu(): void {
     if (this.contextMenu) {
-      this.contextMenu.open = true
+      this.contextMenu.open = true;
     }
+  }
+
+  closeContextMenu(): void {
+    if (this.contextMenu) {
+      this.contextMenu.open = false;
+    }
+  }
+
+  openInfoPanel(): void {
+    this.infoPanelOpen = true;
+    this.closeContextMenu();
   }
 
   copyListToClipboard(): void {
@@ -154,12 +170,32 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     }
   }
 
+  get oneItemLabel(): string {
+    if (!this.list)
+      return '';
+    return ONE_ITEM_LABEL[this.list.type];
+  }
+
+  get itensLabel(): string {
+    if (!this.list)
+      return '';
+    return ITEMS_LABEL[this.list.type];
+  }
+
+  get itemLabel(): string {
+    if (!this.list)
+      return '';
+    return ITEM_LABEL[this.list.type];
+  }
+
   get listReadableDescription(): string {
+    if (!this.list)
+      return ''
     let description = this.items.slice(0, 3).map((i) => i.value).join(', ');
     if (this.items.length > 4) {
-      description = description.concat(' e mais ' + (this.items.length - 3) + ' itens.')
+      description = description.concat(' e mais ' + (this.items.length - 3) + ` ${(this.itensLabel)}.`)
     } else if (this.items.length > 3) {
-      description = description.concat(' e mais 1 item.')
+      description = description.concat(` e mais ${(this.oneItemLabel)}.`)
     }
     return description;
   }
@@ -169,11 +205,11 @@ export class SimpleListPage implements OnInit, AfterViewInit {
       const length = this.items.reduce((a, b) => a + (b ? (1 + (b.additional || 0)) : 0), 0)
 
       if (length === 0) {
-        return NO_ITEM[this.list.type];
+        return NO_ITEM_LABEL[this.list.type];
       } else if (length === 1) {
-        return ONE_ITEM[this.list.type];
+        return this.oneItemLabel;
       } else {
-        return length + ' ' + ITEMS[this.list.type];
+        return length + ' ' + this.itensLabel;
       }
     } else {
       return '';

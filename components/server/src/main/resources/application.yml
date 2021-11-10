@@ -30,3 +30,8 @@ jackson:
   alwaysSerializeErrorsAsList: true
   serialization:
     writeDatesAsTimestamps: false
+
+
+google-cloud:
+  sql:
+    instance: ${INSTANCE_CONNECTION_NAME:}

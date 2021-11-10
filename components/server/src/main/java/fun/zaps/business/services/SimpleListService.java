@@ -30,7 +30,7 @@ public class SimpleListService {
 
 	@NonNull
 	public Optional<SimpleList> findByEncodedId(@NotNull @NonNull String encodedId) {
-		Long id = Long.parseLong(encodedId, Character.MAX_RADIX);
+		Long id = Long.parseLong(new StringBuilder(encodedId).reverse().toString(), Character.MAX_RADIX);
 
 		return this.repository.findById(id);
 	}

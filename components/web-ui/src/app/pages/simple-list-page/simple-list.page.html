@@ -13,7 +13,7 @@
 
       <div class="mdc-menu mdc-menu-surface" #contextMenuDiv>
         <ul class="mdc-deprecated-list" role="menu" aria-hidden="true" aria-orientation="vertical" tabindex="-1">
-          <li class="mdc-deprecated-list-item" role="menuitem" (click)="infoPanelOpen = true" *ngIf="!infoPanelOpen">
+          <li class="mdc-deprecated-list-item" role="menuitem" (click)="openInfoPanel()" *ngIf="!infoPanelOpen">
             <span class="mdc-deprecated-list-item__ripple"></span>
             <span class="mdc-deprecated-list-item__text">Informações da lista</span>
           </li>
@@ -81,7 +81,7 @@
       <form (ngSubmit)="appendItem(); newItemInput.focus()" class="new-item-form" #newItemForm="ngForm">
         <label class="mdc-text-field mdc-text-field--filled" style="flex: 1" #textField>
           <span class="mdc-text-field__ripple"></span>
-          <span class="mdc-floating-label" id="my-label-id">Adicionar item</span>
+          <span class="mdc-floating-label" id="my-label-id">Adicionar {{itemLabel}}</span>
           <input ngModel type="text"
                  autocomplete="off"
                  class="mdc-text-field__input"
@@ -129,7 +129,7 @@
           <span class="mdc-notched-outline__leading"></span>
           <span class="mdc-notched-outline__trailing"></span>
         </span>
-        <input ngModel class="mdc-text-field__input" type="text" aria-label="Label" name="name" maxlength="30">
+        <input ngModel class="mdc-text-field__input" type="text" aria-label="Nome da lista" name="name" maxlength="30" placeholder="Nome da lista" required>
 
         <div class="mdc-text-field-helper-line">
           <div class="mdc-text-field-character-counter"></div>
@@ -137,7 +137,7 @@
       </label>
     </fieldset>
 
-    <fieldset style="box-sizing: border-box; min-height: 105px;">
+    <fieldset style="box-sizing: border-box; min-height: 140px;">
       <h1 class="mdc-typography--subtitle2 header__title">Descrição</h1>
       <ng-container *ngIf="!infoPanelEdit">
         <p class="mdc-typography--body1" style="font-size: 0.9em">
@@ -166,7 +166,7 @@
 
     <fieldset *ngIf="infoPanelEdit" style="flex-direction: row; justify-content: flex-end; gap: 10px; padding-top: 1rem; box-sizing: border-box; min-height: 69px;">
       <button type="button" class="mdc-button" (click)="cancelEdit()">Cancelar</button>
-      <button type="submit" class="mdc-button mdc-button--raised">Salvar</button>
+      <button type="submit" class="mdc-button mdc-button--raised" [disabled]="editListForm.invalid">Salvar</button>
     </fieldset>
   </form>
   <section style="display: flex; flex-direction: column; align-items: center; padding: 1rem" *ngIf="list && !infoPanelEdit">
