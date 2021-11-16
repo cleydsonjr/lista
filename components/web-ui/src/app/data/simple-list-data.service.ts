@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
-import {webSocket, WebSocketSubject} from 'rxjs/webSocket';
 import {SimpleListOperationResult} from "@zaps/lists-angular-client";
+import {ConnectionAwareWebSocketSubject} from "./ConnectionAwareWebSocketSubject";
 
 @Injectable({
   providedIn: 'root'
@@ -16,8 +16,8 @@ export class SimpleListDataService {
     this.rootUrl.pathname = '/ws/lists/listId'
   }
 
-  public connect(listId: string): WebSocketSubject<SimpleListOperationResult> {
-    return webSocket(new URL(listId, this.rootUrl).toString())
+  public connect(listId: string): ConnectionAwareWebSocketSubject<SimpleListOperationResult> {
+    return new ConnectionAwareWebSocketSubject<SimpleListOperationResult>(new URL(listId, this.rootUrl).toString(), 3000, 20)
   }
 
 }

@@ -1,15 +1,16 @@
-import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {SimpleItem, SimpleItemService, SimpleList, SimpleListOperationCommand, SimpleListOperationResult, SimpleListService, SimpleListType} from "@zaps/lists-angular-client";
 import {MDCTextField} from "@material/textfield";
 import {ActivatedRoute, ParamMap, Router} from "@angular/router";
 import {concatMap, debounceTime, filter, map, mergeMap, take, tap} from "rxjs/operators";
 import {SimpleListDataService} from "../../data/simple-list-data.service";
-import {WebSocketSubject} from "rxjs/webSocket";
 import {from, Subject} from "rxjs";
 import {NgForm} from "@angular/forms";
 import {MDCMenu} from '@material/menu';
 import * as copy from "copy-to-clipboard";
 import {Key} from "ts-key-enum";
+import {ConnectionAwareWebSocketSubject} from "../../data/ConnectionAwareWebSocketSubject";
+import {HttpErrorResponse, HttpStatusCode} from "@angular/common/http";
 
 const NO_ITEM_LABEL: Readonly<{ [key in SimpleListType]: string }> = {
   ITEMS: 'Nenhum item',
@@ -39,9 +40,11 @@ const MAX_ITEM_VALUE_LENGTH = 25;
   templateUrl: './simple-list.page.html',
   styleUrls: ['./simple-list.page.scss']
 })
-export class SimpleListPage implements OnInit, AfterViewInit {
+export class SimpleListPage implements OnInit, AfterViewInit, OnDestroy {
 
-  webSocketSubject?: WebSocketSubject<SimpleListOperationResult>
+  private listId?: string;
+  private webSocketSubject?: ConnectionAwareWebSocketSubject<SimpleListOperationResult>;
+
   list?: SimpleList;
   items: SimpleItem[] = [];
   hasShareApi = false;
@@ -60,6 +63,10 @@ export class SimpleListPage implements OnInit, AfterViewInit {
   maxItemValueLength = MAX_ITEM_VALUE_LENGTH;
 
   operationCommandSubject: Subject<SimpleListOperationCommand> = new Subject<SimpleListOperationCommand>();
+  connected = false;
+  willReconnect = true;
+  loadSubject = new Subject<string>();
+  errorMessage?: string;
 
   constructor(
     private readonly _activatedRoute: ActivatedRoute,
@@ -69,6 +76,32 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     private readonly _simpleListDataService: SimpleListDataService,
     private readonly _elementRef: ElementRef
   ) {
+    this.loadSubject.subscribe((listId) => {
+      this._simpleListService.getSimpleListById(listId).subscribe({
+        next: (list: SimpleList) => {
+          this.connectWebSocket(list.id);
+          this.errorMessage = undefined;
+          this.list = list;
+          this.items = list.items;
+          if (this.editListForm) {
+            this.editListForm.setValue({name: list.name, description: list.description || ''})
+          }
+          setTimeout(() => {
+            this.scrollToBottom();
+          })
+        },
+        error: (err) => {
+          if (err instanceof HttpErrorResponse) {
+            if (err.status === HttpStatusCode.NotFound) {
+              this._router.navigate(['/'])
+            } else {
+              this.errorMessage = 'Falha ao carregar lista'
+            }
+          }
+          this.willReconnect = false;
+        }
+      });
+    });
   }
 
   ngOnInit(): void {
@@ -77,22 +110,31 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     this._activatedRoute.paramMap.pipe(
       filter((params: ParamMap) => params.has('listId')),
       map((params: ParamMap) => params.get('listId')!),
-      tap((listId: string) => {
-        this.webSocketSubject = this._simpleListDataService.connect(listId);
-        this.webSocketSubject.subscribe((result => this.refreshByResult(result)));
-      }),
-      mergeMap((listId: string) => this._simpleListService.getSimpleListById(listId))
-    ).subscribe(((list: SimpleList) => {
-      this.list = list;
-      this.items = list.items;
-      if (this.editListForm) {
-        this.editListForm.setValue({name: list.name, description: list.description || ''})
-      }
-      this.subscribeToOperationCommand(list.id);
-      setTimeout(() => {
-        this.scrollToBottom();
+      tap((listId) => {
+        this.listId = listId;
+        this.subscribeToOperationCommand(listId);
       })
-    }));
+    ).subscribe(this.loadSubject);
+  }
+
+  ngOnDestroy(): void {
+    if (this.webSocketSubject) {
+      this.webSocketSubject.complete();
+    }
+  }
+
+  private connectWebSocket(listId: string): void {
+    this.willReconnect = true;
+    if (this.webSocketSubject) {
+      this.webSocketSubject.complete();
+    }
+    this.webSocketSubject = this._simpleListDataService.connect(listId);
+    this.webSocketSubject.subscribe((result => this.refreshByResult(result)));
+
+    this.webSocketSubject.connectionStatus.subscribe({
+      next: (connected) => this.connected = connected,
+      complete: () => this.willReconnect = false,
+    })
   }
 
   ngAfterViewInit(): void {
@@ -105,6 +147,7 @@ export class SimpleListPage implements OnInit, AfterViewInit {
     document.addEventListener('keyup', (event) => {
       if (event.key == Key.Escape) {
         this.infoPanelOpen = false;
+        this.infoPanelEdit = false;
       }
     })
   }
@@ -432,6 +475,12 @@ export class SimpleListPage implements OnInit, AfterViewInit {
 
     if (this.editListForm && this.list) {
       this.editListForm.setValue({name: this.list.name, description: this.list.description || ''})
+    }
+  }
+
+  reload(): void {
+    if (this.listId) {
+      this.loadSubject.next(this.listId)
     }
   }
 }

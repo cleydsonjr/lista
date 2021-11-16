@@ -38,7 +38,6 @@
       </div>
     </section>
   </header>
-
   <ul class="mdc-deprecated-list simple-list" #simpleList>
     <li class="mdc-deprecated-list-item list-item" tabindex="0" *ngFor="let item of items; let i = index;" #listItemElement>
       <span class="mdc-deprecated-list-item__ripple"></span>
@@ -67,14 +66,10 @@
 
         <span class="mdc-deprecated-list-item__meta material-icons"
               [class.list-item__meta-disabled]="item.additional && item.additional >= 8"
-              aria-label="Mais um" (click)="(!item.additional || item.additional < 8) && plusOne(i, item)">
-      plus_one
-      </span>
+              aria-label="Mais um" (click)="(!item.additional || item.additional < 8) && plusOne(i, item)">plus_one</span>
       </ng-container>
 
-      <span class="mdc-deprecated-list-item__meta material-icons" aria-hidden="true" (click)="removeItem(i)">
-      clear
-    </span>
+      <span class="mdc-deprecated-list-item__meta material-icons" aria-hidden="true" (click)="removeItem(i)">clear</span>
     </li>
 
     <li class="new-item-form-container" #listItemElement>
@@ -105,6 +100,18 @@
       </form>
     </li>
   </ul>
+
+  <div class="load-error-wall" *ngIf="!connected">
+    <h5 class="mdc-typography--headline5">{{ errorMessage || 'Você está desconectado'}}</h5>
+    <p class="mdc-typography--body1">
+      <span *ngIf="willReconnect; else reconnectButton" class="loading" style="width: 175px; display: block; text-align: left">Tentando reconectar</span>
+
+      <ng-template #reconnectButton>
+        <button class="mdc-button mdc-button--raised" (click)="reload()">Recarregar</button>
+      </ng-template>
+    </p>
+  </div>
+
 </section>
 
 <aside class="simple-list-info" [style.display]="infoPanelOpen ? 'flex' : 'none'">

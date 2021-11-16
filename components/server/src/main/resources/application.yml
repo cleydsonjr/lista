@@ -13,6 +13,7 @@ micronaut:
   server:
     cors:
       enabled: true
+    idle-timeout: 30m
 
 datasources:
   default:
